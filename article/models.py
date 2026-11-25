@@ -85,14 +85,9 @@ class ArticleLike(models.Model):
     
     
 class Comment(models.Model):
-    class Status(models.TextChoices):
-        PENDING='pending',"Pending"
-        APPROVED='approved',"Approved"
-        REJECTED='rejected','Rejected'
     article = models.ForeignKey(Article,on_delete=models.CASCADE,related_name='comments')
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='comments')
     content = models.TextField()
-    status = models.CharField(max_length=20,choices=Status.choices,default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):

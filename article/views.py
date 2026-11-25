@@ -1,13 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
 from rest_framework import viewsets
 from django.db import models
-from .models import Article,Category,ArticleLike
-from .serializers import ArticleSerializer,CategorySerializer
-from .permissions import IsAuthorEditorOrAdmin,IsEditorOrAdminOrReadOnly
-from rest_framework.permissions import IsAuthenticated
+from .models import Article,Category,ArticleLike,Comment
+from .serializers import ArticleSerializer,CategorySerializer,CommentSerializer
+from .permissions import IsAuthorEditorOrAdmin,IsEditorOrAdminOrReadOnly,IsCommentOwnerOrEditorAdmin
+from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -23,12 +23,14 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
         # Annotate like count for every article
         queryset = Article.objects.annotate(
-            like_count=Count("likes")
+            like_count=Count("likes"),
+            comment_count=Count("comments")
         ).select_related(
             "author",
             "category"
+        ).prefetch_related(
+            "comments__user"
         )
-
         # Anonymous users: published articles only
         if not user.is_authenticated:
             return queryset.filter(
@@ -94,4 +96,48 @@ class ArticleLikeView(APIView):
         return Response(
             {"detail": "Like removed successfully."},
             status=status.HTTP_200_OK
+        )
+        
+        
+        
+
+class CommentViewSet(viewsets.ModelViewSet):
+
+    serializer_class = CommentSerializer
+
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        IsCommentOwnerOrEditorAdmin
+    ]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        queryset = Comment.objects.select_related(
+            "user",
+            "article"
+        )
+
+        if not user.is_authenticated:
+            return queryset
+
+        if user.role in ["editor", "admin"]:
+            return queryset
+
+        return queryset.filter(
+            models.Q(user=user) |
+            models.Q(article__status=Article.Status.PUBLISHED)
+        ).distinct()
+
+    def perform_create(self, serializer):
+
+        article = get_object_or_404(
+            Article,
+            pk=self.kwargs["article_pk"],
+            status=Article.Status.PUBLISHED
+        )
+
+        serializer.save(
+            article=article,
+            user=self.request.user
         )

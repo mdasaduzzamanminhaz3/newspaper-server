@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import Article,Category,ArticleLike
+from .models import Article,Category,ArticleLike,Comment
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,6 +10,39 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 
+class CommentSerializer(serializers.ModelSerializer):
+
+    user_email = serializers.EmailField(
+        source="user.email",
+        read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "user",
+            "user_email",
+            "content",
+            "status",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "user",
+            "user_email",
+            "status",
+            "created_at",
+        ]
+
+    def validate_content(self, value):
+        if not value.strip():
+            raise serializers.ValidationError(
+                "Comment cannot be empty."
+            )
+
+        return value.strip()
 
 
 
@@ -20,6 +53,8 @@ class ArticleSerializer(serializers.ModelSerializer):
         read_only=True
     )
     like_count = serializers.IntegerField(read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
+    comment_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Article
         fields = [
@@ -32,6 +67,8 @@ class ArticleSerializer(serializers.ModelSerializer):
             "author",
             "author_email",
             "like_count",
+            "comment_count",
+            "comments",
             "status",
             "created_at",
             "updated_at",
@@ -42,6 +79,8 @@ class ArticleSerializer(serializers.ModelSerializer):
             "id",
             "slug",
             "like_count",
+            "comments",
+            "comment_count",
             "author",
             "author_email",
             "created_at",
@@ -72,3 +111,7 @@ class ArticleLikeSerializer(serializers.ModelSerializer):
         model=ArticleLike
         fields=['id','article','user','user_email','created_at']
         read_only_fields=['id','user','user_email','created_at']
+        
+        
+        
+

@@ -47,3 +47,17 @@ class IsEditorOrAdminOrReadOnly(BasePermission):
             and user.is_authenticated
             and user.role in ["editor", "admin"]
         )
+
+
+class IsCommentOwnerOrEditorAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        user = request.user
+        if not user.is_authenticated:
+            return False
+
+        if user.role in ["editor", "admin"]:
+            return True
+
+        return obj.user_id == user.id
