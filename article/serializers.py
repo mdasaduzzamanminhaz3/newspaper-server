@@ -1,6 +1,16 @@
 
 from rest_framework import serializers
-from .models import Article
+from .models import Article,Category
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields= ['id','name','slug','description','is_active','created_at']
+        read_only_fields = ['id','slug','created_at']
+
+
+
+
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -18,6 +28,7 @@ class ArticleSerializer(serializers.ModelSerializer):
             "slug",
             "excerpt",
             "content",
+            'category',
             "author",
             "author_email",
             "status",

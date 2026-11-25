@@ -3,11 +3,10 @@ from django.shortcuts import render
 # Create your views here.
 
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.db import models
-from .models import Article
-from .serializers import ArticleSerializer
-from .permissions import IsAuthorEditorOrAdmin
+from .models import Article,Category
+from .serializers import ArticleSerializer,CategorySerializer
+from .permissions import IsAuthorEditorOrAdmin,IsEditorOrAdminOrReadOnly
 
 
 class ArticleViewSet(viewsets.ModelViewSet):
@@ -15,7 +14,6 @@ class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer
 
     permission_classes = [
-        IsAuthenticatedOrReadOnly,
         IsAuthorEditorOrAdmin,
     ]
 
@@ -46,3 +44,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset=Category.objects.filter(is_active=True)
+    serializer_class=CategorySerializer
+    permission_classes=[IsEditorOrAdminOrReadOnly]
