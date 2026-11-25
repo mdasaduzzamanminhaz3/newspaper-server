@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from accounts.views import RegistrationView, CustomLoginView,ProfileView,LogoutView
-from article.views import ArticleViewSet,CategoryViewSet
+from article.views import ArticleViewSet,CategoryViewSet,ArticleLikeView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from drf_spectacular.views import (
@@ -15,6 +15,8 @@ router = DefaultRouter()
 router.register("articles",ArticleViewSet,basename="article")
 router.register('categories',CategoryViewSet,basename='category')
 urlpatterns = [
+    #articles
+    path('articles/<int:pk>/like/',ArticleLikeView.as_view(),name='article-like'),
     # Authentication
     path("register/", RegistrationView.as_view(), name="register"),
     path("login/", CustomLoginView.as_view(), name="login"),

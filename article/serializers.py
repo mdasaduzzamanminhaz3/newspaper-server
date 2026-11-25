@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import Article,Category
+from .models import Article,Category,ArticleLike
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,7 +19,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         source="author.email",
         read_only=True
     )
-
+    like_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Article
         fields = [
@@ -31,6 +31,7 @@ class ArticleSerializer(serializers.ModelSerializer):
             'category',
             "author",
             "author_email",
+            "like_count",
             "status",
             "created_at",
             "updated_at",
@@ -40,6 +41,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "slug",
+            "like_count",
             "author",
             "author_email",
             "created_at",
@@ -62,3 +64,11 @@ class ArticleSerializer(serializers.ModelSerializer):
             )
 
         return value.strip()
+
+
+class ArticleLikeSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source="user.email",read_only=True)
+    class Meta:
+        model=ArticleLike
+        fields=['id','article','user','user_email','created_at']
+        read_only_fields=['id','user','user_email','created_at']
